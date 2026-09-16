@@ -1,0 +1,247 @@
+%-------------------------
+% Resume in Latex
+% Author : Jake Gutierrez
+% Based off of: https://github.com/sb2nov/resume
+% License : MIT
+%
+% Jinja2-templated variant. Rendered by render_resume.py using alternate
+% delimiters so LaTeX's own braces/percent signs never collide with Jinja.
+% See build_jinja_env() in render_resume.py for the exact delimiter set.
+% All content comes from experience_bank.json at render time. No personal
+% data is hardcoded in this file.
+%------------------------
+
+% Deliberately letterpaper, not legalpaper: legal paper was tried earlier
+% to fit more content on one page, but it breaks ATS parsing compliance.
+% Do not change this without re-confirming ATS impact.
+%
+% 10pt (not Jake's original 11pt): at 11pt the text column fits ~110 chars
+% per line vs ~126 in the reference resume, so long bullets wrapped an extra
+% line each and a standard selection spilled onto page 2. 10pt restores that
+% density on letter paper. Raising it back to 11pt costs roughly 3-4 lines.
+\documentclass[letterpaper,10pt]{article}
+
+\usepackage{latexsym}
+\usepackage[empty]{fullpage}
+\usepackage{titlesec}
+\usepackage{marvosym}
+\usepackage[usenames,dvipsnames]{color}
+\usepackage{verbatim}
+\usepackage{enumitem}
+\usepackage[hidelinks]{hyperref}
+\usepackage{fancyhdr}
+\usepackage[english]{babel}
+\usepackage{tabularx}
+\input{glyphtounicode}
+
+
+%----------FONT OPTIONS----------
+% sans-serif
+% \usepackage[sfdefault]{FiraSans}
+% \usepackage[sfdefault]{roboto}
+% \usepackage[sfdefault]{noto-sans}
+% \usepackage[default]{sourcesanspro}
+
+% serif
+% \usepackage{CormorantGaramond}
+% \usepackage{charter}
+
+
+\pagestyle{fancy}
+\fancyhf{} % clear all header and footer fields
+\fancyfoot{}
+\renewcommand{\headrulewidth}{0pt}
+\renewcommand{\footrulewidth}{0pt}
+
+% Adjust margins
+\addtolength{\oddsidemargin}{-0.5in}
+\addtolength{\evensidemargin}{-0.5in}
+\addtolength{\textwidth}{1in}
+\addtolength{\topmargin}{-.5in}
+\addtolength{\textheight}{1.0in}
+
+\urlstyle{same}
+
+\raggedbottom
+\raggedright
+\setlength{\tabcolsep}{0in}
+
+% Sections formatting
+\titleformat{\section}{
+  \vspace{-4pt}\scshape\raggedright\large
+}{}{0em}{}[\color{black}\titlerule \vspace{-5pt}]
+
+% Ensure that generate pdf is machine readable/ATS parsable
+\pdfgentounicode=1
+
+%-------------------------
+% Custom commands
+\newcommand{\resumeItem}[1]{
+  \item\small{
+    {#1 \vspace{-2pt}}
+  }
+}
+
+\newcommand{\resumeSubheading}[4]{
+  \vspace{-2pt}\item
+    \begin{tabular*}{0.97\textwidth}[t]{l@{\extracolsep{\fill}}r}
+      \textbf{#1} & #2 \\
+      \textit{\small#3} & \textit{\small #4} \\
+    \end{tabular*}\vspace{-7pt}
+}
+
+\newcommand{\resumeSubheadingExt}[6]{
+  \vspace{-2pt}\item
+    \begin{tabular*}{0.97\textwidth}[t]{l@{\extracolsep{\fill}}r}
+      \textbf{#1} & #2 \\
+      \textit{\small#3} & \textit{\small #4} \\
+      \multicolumn{2}{p{0.97\textwidth}}{
+        {\small#5} \hfill {\small#6}
+      } \\
+    \end{tabular*}\vspace{-7pt}
+}
+
+\newcommand{\resumeSubSubheading}[2]{
+    \item
+    \begin{tabular*}{0.97\textwidth}{l@{\extracolsep{\fill}}r}
+      \textit{\small#1} & \textit{\small #2} \\
+    \end{tabular*}\vspace{-7pt}
+}
+
+\newcommand{\resumeProjectHeading}[2]{
+    \item
+    \begin{tabular*}{0.97\textwidth}{l@{\extracolsep{\fill}}r}
+      \small#1 & #2 \\
+    \end{tabular*}\vspace{-7pt}
+}
+
+\newcommand{\resumeSubItem}[1]{\resumeItem{#1}\vspace{-4pt}}
+
+\renewcommand\labelitemii{$\vcenter{\hbox{\tiny$\bullet$}}$}
+
+\newcommand{\resumeSubHeadingListStart}{\begin{itemize}[leftmargin=0.15in, label={}]}
+\newcommand{\resumeSubHeadingListEnd}{\end{itemize}}
+\newcommand{\resumeItemListStart}{\begin{itemize}}
+\newcommand{\resumeItemListEnd}{\end{itemize}\vspace{-5pt}}
+
+%-------------------------------------------
+%%%%%%  RESUME STARTS HERE  %%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+\begin{document}
+
+((= Header: every field comes from profile.*; profile.legal_name is never referenced. =))
+%----------HEADING----------
+\begin{center}
+    \textbf{\Huge \scshape ((( profile.preferred_name | tex )))} \\ \vspace{1pt}
+    \small ((( profile.location | tex ))) $|$ ((( profile.phone | tex ))) $|$
+    \href{mailto:((( profile.email | url )))}{\underline{((( profile.email | tex )))}} $|$
+    \href{https://((( profile.linkedin | url )))}{\underline{((( profile.linkedin | tex )))}} $|$
+    \href{https://((( profile.github | url )))}{\underline{((( profile.github | tex )))}}
+\end{center}
+
+
+((* if education *))
+((= Renders e.coursework only. e.coursework_extra is deliberately NOT printed:
+    it exists in the bank for JD-keyword matching, and printing it overflows
+    the one-page budget. =))
+%-----------EDUCATION-----------
+\section{Education}
+  \resumeSubHeadingListStart
+((* for e in education *))
+    \resumeSubheadingExt
+      {((( e.institution | tex )))}{((( e.location | default('', true) | tex )))}
+      {((( e.degree | tex )))}{((( e.start | mmy ))) -- ((( e.end | mmy )))}
+      {((( e.coursework | default('', true) | tex )))}{((* if e.gpa *))GPA: ((( e.gpa | tex )))((* endif *))}
+((* endfor *))
+  \resumeSubHeadingListEnd
+((* endif *))
+
+
+((* if experience *))
+%-----------EXPERIENCE-----------
+\section{Experience}
+  \resumeSubHeadingListStart
+((* for e in experience *))
+    \resumeSubheading
+      {((( e.title | tex )))}{((( e.start | mmy ))) -- ((( e.end | mmy )))}
+      {((( e.org | tex )))}{}
+      \resumeItemListStart
+((* for b in e.bullets *))
+        \resumeItem{((( b.text | tex )))}
+((* endfor *))
+      \resumeItemListEnd
+((* endfor *))
+  \resumeSubHeadingListEnd
+((* endif *))
+
+
+((* if projects *))
+%-----------PROJECTS-----------
+\section{Projects}
+    \resumeSubHeadingListStart
+((* for e in projects *))
+      \resumeProjectHeading
+          {\textbf{((( e.title | tex )))}((* if e.tech *)) $|$ \emph{((( e.tech | tex )))}((* endif *))}{((( e.start | mmy ))) -- ((( e.end | mmy )))}
+          \resumeItemListStart
+((* for b in e.bullets *))
+            \resumeItem{((( b.text | tex )))}
+((* endfor *))
+          \resumeItemListEnd
+((* endfor *))
+    \resumeSubHeadingListEnd
+((* endif *))
+
+
+((* if activities *))
+%-----------ACTIVITIES-----------
+\section{Activities}
+    \resumeSubHeadingListStart
+((* for e in activities *))
+      \resumeProjectHeading
+          {\textbf{((( e.org | tex )))} $|$ \emph{((( e.title | tex )))}}{((( e.start | mmy ))) -- ((( e.end | mmy )))}
+          \resumeItemListStart
+((* for b in e.bullets *))
+            \resumeItem{((( b.text | tex )))}
+((* endfor *))
+          \resumeItemListEnd
+((* endfor *))
+    \resumeSubHeadingListEnd
+((* endif *))
+
+
+((* if skills *))
+((= Flat skills list in, grouped for display by the order categories first appear. =))
+((* set categories = [] *))
+((* for s in skills *))((* if s.category not in categories *))((* set _ = categories.append(s.category) *))((* endif *))((* endfor *))
+%-----------PROGRAMMING SKILLS-----------
+\section{Technical Skills}
+ \begin{itemize}[leftmargin=0.15in, label={}]
+    \small{\item{
+((* for c in categories *))
+     \textbf{((( c | tex )))}{: ((( skills | selectattr('category', 'equalto', c) | map(attribute='name') | join(', ') | tex )))} \\
+((* endfor *))
+    }}
+ \end{itemize}
+((* endif *))
+
+
+((* if certifications *))
+%---------------CERTIFICATIONS------------
+\section{Certifications}
+\begin{itemize}[leftmargin=0.15in, label={}]
+\small
+\item
+\begin{tabular*}{\textwidth}{@{\extracolsep{\fill}} l l r}
+((* for c in certifications *))
+\textbf{((( c.name | tex )))}
+& ((( c.date | mmy )))
+& ((* if c.credential_id *))((* if c.credential_id | is_url *))\href{https://((( c.credential_id | url )))}{\underline{((( c.credential_id | tex )))}}((* else *))ID: ((( c.credential_id | tex )))((* endif *))((* endif *)) \\
+((* endfor *))
+\end{tabular*}
+\end{itemize}
+((* endif *))
+
+
+%-------------------------------------------
+\end{document}
