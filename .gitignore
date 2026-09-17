@@ -1,4 +1,5 @@
-/jobs
 experience_bank.json
-
+jobs/
+*.pdf
 .claude/env.local
+.venv/
