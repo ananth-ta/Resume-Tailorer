@@ -150,7 +150,7 @@
   \resumeSubHeadingListStart
 ((* for e in education *))
     \resumeSubheadingExt
-      {((( e.institution | tex )))}{((( e.location | default('', true) | tex )))}
+      {((( e.institution | tex )))}{\textbf{((( e.location | default('', true) | tex )))}}
       {((( e.degree | tex )))}{((( e.start | mmy ))) -- ((( e.end | mmy )))}
       {((( e.coursework | default('', true) | tex )))}{((* if e.gpa *))GPA: ((( e.gpa | tex )))((* endif *))}
 ((* endfor *))
@@ -165,7 +165,7 @@
 ((* for e in experience *))
     \resumeSubheading
       {((( e.title | tex )))}{((( e.start | mmy ))) -- ((( e.end | mmy )))}
-      {((( e.org | tex )))}{}
+      {((( e.org | tex )))((* if e.location *))\quad\textup{\textbf{((( e.location | tex )))}}((* endif *))}{}
       \resumeItemListStart
 ((* for b in e.bullets *))
         \resumeItem{((( b.text | tex )))}

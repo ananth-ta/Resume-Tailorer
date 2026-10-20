@@ -1,6 +1,6 @@
 ---
 name: fit-check
-description: Take a pasted job description, set up its tracking under jobs/, and score how well it fits the user's background from experience_bank.json. Use when the user pastes a JD or asks whether a role is worth applying to. Produces a structured fit assessment and stops — it never generates a resume.
+description: Take a pasted job description, set up its tracking under jobs/, and score how well it fits the user's background from experience_bank.json. Use when the user pastes a JD or asks whether a role is worth applying to. Produces a structured fit assessment, always walks the user through it conversationally (score /10, TL;DR, detailed explanation) unless --silent is passed, and stops — it never generates a resume.
 ---
 
 # fit-check
@@ -162,6 +162,14 @@ likely earmarked for someone already in process. Signals: exhaustively
 long tool/skill lists, oddly hyper-specific requirement combinations,
 boilerplate phrasing.
 
+When none of these signals are present, say "no visible PERM cues" rather
+than asserting the posting is genuine — PERM postings at large sponsors can
+read exactly like normal requisitions (see
+`google-software-engineer-ai-ml-shopping-relevance-models-20261007`). This
+is rare, so it's a caution, not a reason to downgrade: if the user has a
+contact at the company, a quick check that the req exists internally is
+cheap insurance.
+
 - **`source_reliability`**: `normal` | `likely-earmarked`, plus a brief
   note.
 
@@ -252,13 +260,56 @@ whoever builds the selection next. Typical content:
 Write it for `tailor-resume` as the reader, not the user — though the user
 can open it any time.
 
-### 8. Save and stop
+### 8. Save
 
 Write `fit_check.json` and `notes_for_tailorer.md` into
 `jobs/<job_id>/`. Optionally update the job's row in `jobs/index.md` to
 `status: fit-checked` — if you do, leave the `role` column exactly as
 written at intake.
 
-Show the result and **stop**. Do not build a selection, do not call
-`render_resume.py`, do not suggest bullets to use. Wait for explicit
-approval.
+### 9. Walk the user through it, then stop
+
+**The walkthrough is mandatory.** Every fit-check ends with it as your
+chat reply. The only exception is `--silent`: if the arguments contain
+`--silent`, or the user explicitly asks for no walkthrough, reply with
+just the job_id, `fit_score`/10, `recommendation`, and the path to
+`jobs/<job_id>/`. Strip `--silent` from the arguments before saving
+`jd.txt`. Don't treat brevity, a long JD, or batch intake as an implicit
+`--silent`; only an explicit request counts.
+
+The walkthrough is a **conversational explanation** of the fit-check —
+not a dump of the JSON, and not a terse bullet summary. The files are the
+record; the walkthrough is how the user actually absorbs the judgment.
+It always has these three parts, in this order:
+
+1. **Score**: `fit_score` out of 10 plus the recommendation, stated
+   up front as a heading or the first line (e.g. "**7/10, apply**").
+2. **TL;DR**: one short paragraph (2–4 sentences) giving the verdict,
+   the main reason for it, and the most important caveat or next step.
+   Someone who reads only this paragraph should know whether to bother.
+3. **Detailed explanation**: everything below.
+
+For the detailed explanation, talk them through it the way a sharp
+friend who read both the JD and their background would:
+
+- **Explain what the role actually is** — what the company does and what
+  the JD is really asking for underneath its phrasing, especially when
+  the posting is vague, founder-voiced, or keyword-heavy.
+- **Walk through why the score is what it is** — where their background
+  genuinely lines up (naming the specific experiences/projects in plain
+  terms, not bank IDs), and where the gaps are and how much each one
+  actually matters.
+- **Cover the flags in context** — seniority, visa, stability, and source
+  reliability, each with what it means for *them* specifically (e.g. F-1/
+  OPT implications), and how confident the underlying evidence is.
+- **Say what you'd do in their position** — whether it's worth the
+  effort, and any questions to resolve or cheap moves to make before
+  investing in a tailored resume.
+
+Write in flowing prose with light structure (short headed sections are
+fine); keep it readable in a few minutes. Include the sources list at the
+end. Don't use bank IDs in the walkthrough — the user thinks in project
+names, not `proj_006_b2`.
+
+Then **stop**. Do not build a selection, do not call `render_resume.py`,
+do not propose specific resume bullets. Wait for explicit approval.

@@ -1,5 +1,6 @@
 experience_bank.json
 jobs/
+default/
 *.pdf
 .claude/env.local
 .venv/

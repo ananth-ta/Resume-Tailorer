@@ -203,12 +203,11 @@ deleting content. Apply these in order, re-rendering after each:
    individual bullets ever will.
 
    **Watch `proj_004` (Intelligent Interactive Study Aid) specifically:**
-   it carries overlapping bullets from historical resume merges. Only
-   `_b1`, `_b2`, `_b3` are distinct achievements — `_b4` restates the
-   whole project, `_b6` overlaps `_b1`, and `_b5` is a present-tense
-   description rather than something the user did. If `proj_004` is
-   included at all, prefer its `one_liner`, or restrict to `_b1`/`_b2`/
-   `_b3`. Never include all six.
+   `_b6` ("Led the backend development…") overlaps `_b1` — both describe
+   the LlamaIndex/RAG backend. It was kept because it is the only record
+   that the user *led* the backend. Include `_b1` or `_b6`, not both,
+   alongside `_b2`/`_b3` as needed. (`_b4` and `_b5`, which duplicated the
+   whole project, were removed from the bank on 2026-10-05.)
 
 2. **Switch remaining long bullets to `variant: "short"`** where a `short`
    field exists. Not every bullet has one, and requesting a missing
