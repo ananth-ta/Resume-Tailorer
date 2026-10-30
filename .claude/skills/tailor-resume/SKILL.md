@@ -46,6 +46,35 @@ failure this setup exists to prevent: base Python is on PATH and is what a
 bare `python` resolves to, but it lacks the required packages and fails
 with a confusing ImportError that looks like an unrelated problem.
 
+## Output format
+
+**Read `.claude/format.local`** (written by `startup-wizard`). Plain
+`key=value` lines: `format` is `auto`, `latex` or `docx`; `latex_engine`
+is an optional absolute path to a `pdflatex`/`xelatex` that isn't on PATH.
+Pass them to the renderer as `--format <format>` and, when present,
+`--latex-engine <latex_engine>`.
+
+**Stick to the stored choice.**
+
+- **`latex` / `docx`:** never produce the other format unprompted. If
+  `format=latex` and the render reports no usable LaTeX engine (or
+  compilation fails), **stop**: say what happened, and offer (a) fixing
+  the install/path, or (b) a Word version for this run.
+- **`auto`:** the renderer picks — LaTeX if an engine is available,
+  otherwise Word. **Always tell the user which one you got**, and if it
+  was Word because no engine was found, say that plainly (and that page
+  count is unverified). `auto` covers an engine being *unavailable* only:
+  if LaTeX is present but compilation fails, **stop** and report the
+  error exactly as for `latex`; don't paper over it with Word.
+
+Only change the stored value if the user says to switch from now on, by
+editing `format.local`.
+
+**If `.claude/format.local` is missing** (a checkout set up before this
+existed, or an old deferral), run the format step from `startup-wizard`
+(detect LaTeX; if found, record `auto` and tell them; if not, offer
+install / existing path / Word-only / auto), then write the file.
+
 ## Selection schema
 
 There is no example selection file in the project. Construct the JSON
@@ -183,19 +212,47 @@ Do not fall back to system/base Python to get around this — base does not
 have these packages, and silently switching interpreters hides the real
 problem. Do not proceed to render until the preflight passes.
 
+**Word possible?** If `format` is `docx` or `auto` (or the user asks for
+the Word alternative), also check `<PY> -c "import docx"`; if it fails, the fix is
+the same `pip install -r requirements.txt`.
+
 Then write the selection to `jobs/<job_id>/selection.json` and render:
 
 ```
 <PY> render_resume.py \
   --bank experience_bank.json \
   --selection jobs/<job_id>/selection.json \
-  --output jobs/<job_id>/resume_v1.tex
+  --output jobs/<job_id>/resume_v<N>.tex \
+  --format <format> [--latex-engine <latex_engine>]
 ```
+
+`<format>` and the optional engine path come from `.claude/format.local`
+(see Output format). For `docx` the renderer replaces the `--output`
+extension, writing `jobs/<job_id>/resume_v<N>.docx`. Same selection, same
+verbatim content, same section order either way.
+
+`<N>` is 1 for a first tailoring. When a resume already exists, use the
+next number up: a user-requested revision is a new version, so don't
+overwrite the current one.
+
+**Archive superseded versions (default).** Once version N has rendered and
+been accepted, move every earlier resume to `jobs/<job_id>/deprecated/`,
+creating that directory if needed. That means `resume_v<M>.tex`,
+`.pdf` and `.docx`. Also save each old selection there as `selection_v<M>.json`, so
+the job folder's top level only ever holds the current `resume_v<N>` and
+the live `selection.json`. Snapshot `selection.json` into `deprecated/`
+*before* overwriting it for the new version, or the old selection is
+lost. Skip archiving only when the user explicitly asks to keep earlier
+versions in place. Overflow re-renders while fitting a single version to
+one page overwrite that same `resume_v<N>`; they are not new versions.
 
 ### 8. If it overflows one page
 
 The renderer reports a page count and warns above one page. Don't start
-deleting content. Apply these in order, re-rendering after each:
+deleting content. (In Word mode there is no page count — the renderer says
+so. Check the length another way, e.g. export through Word if it's
+installed, or ask the user to open the `.docx`; if you can't verify it,
+say that in the report rather than claiming one page.) Apply these in order, re-rendering after each:
 
 1. **Switch the lowest-relevance project or activity to
    `mode: "one_liner"`.** This is by far the biggest lever — collapsing a
@@ -230,7 +287,8 @@ nonexistent entry ID, bullet ID, skill name, missing `short`, or missing
 renders. **Don't re-implement that check.**
 
 Do confirm the run succeeded before reporting done — non-zero exit, or no
-compiled PDF path in the output, means it did not. If validation failed,
+compiled PDF path (LaTeX) / "Rendered Word document" line (docx) in the
+output, means it did not. If validation failed,
 read the error, fix the selection, and re-run. Never report success on an
 unverified run.
 
@@ -272,7 +330,9 @@ Write in plain prose:
 Give the user:
 
 - the final **page count**
-- the file paths: `jobs/<job_id>/resume_v1.tex` and `.pdf`
+- the file paths: `jobs/<job_id>/resume_v<N>.tex` and `.pdf` (or
+  `.docx` for the Word format), plus
+  which earlier versions were moved to `deprecated/`
 - which entries/bullets were chosen and **why**, including any deviation
   from newest-first ordering or the standard allocation
 - anything you had to compress (`one_liner` / `short`) to make it fit
@@ -289,6 +349,23 @@ only trusting the page count. A selection can satisfy every mechanical
 check and still read badly — duplicated content, a section opening
 mid-detail, entries out of date order. The page count is not a proxy for a
 readable resume.
+
+**Offer the other format once, at the end of the report.** The stored
+choice governed this run (under `auto`, "the other" is whichever format
+it did *not* produce); now ask whether they'd also like the same
+resume in the alternative — one short line, e.g. "Want this one as a Word
+doc too?" (or "…as a LaTeX PDF too?"). Don't offer it earlier, and don't
+ask again for the same job after a no.
+
+- **Yes:** re-render the **same** selection with `--format <other>` into
+  the same `resume_v<N>` — it is another rendering of this version, not a
+  new version, so nothing is archived. For LaTeX as the alternative, the
+  engine must be usable (PATH or `latex_engine`); if it isn't, say so and
+  point to the `startup-wizard` format step rather than trying anyway.
+  Report the extra file path. Word output has no page count, so say that
+  length wasn't verified unless you checked it another way.
+- **The stored choice does not change** unless they explicitly say they
+  want to switch from now on; then update `.claude/format.local`.
 
 ### 12. Status updates
 

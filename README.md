@@ -9,6 +9,15 @@ the job, and a deterministic Python renderer fills a LaTeX template with
 that content verbatim. Nothing on a generated resume can be invented,
 because nothing on the generation path is capable of writing text.
 
+> ## ⚠️ First step after cloning: run `/startup-wizard`
+>
+> Open the cloned folder in Claude Code and run **`/startup-wizard`
+> before anything else.** Nothing works without it: it builds your
+> experience bank, creates the Python environment (a venv, recommended),
+> and records your LaTeX/Word choice. `fit-check`, `tailor-resume` and
+> `add-experience` all depend on what it sets up, and will stop and send
+> you back to it if it hasn't been run.
+
 ---
 
 ## Prerequisites
@@ -19,11 +28,34 @@ because nothing on the generation path is capable of writing text.
 | **LaTeX engine** | `pdflatex` or `xelatex`, for compiled PDFs. [MiKTeX](https://miktex.org/) (Windows) or [TeX Live](https://tug.org/texlive/) (cross-platform). |
 | **Claude Code** | The skills live in `.claude/skills/` and run inside Claude Code. |
 
-The LaTeX engine is **optional**. Without one, `render_resume.py` writes
-the `.tex` file and tells you to compile it yourself — it doesn't fail.
+**Use a dedicated virtual environment.** It keeps this project's pinned
+dependencies separate from your other Python work and is easy to delete
+and recreate. You don't need to make it yourself: all you need beforehand
+is a working Python install, and `startup-wizard` creates the venv
+(`.venv/`), installs the dependencies and verifies it. If you already
+have an environment you'd rather use, the wizard accepts that too, but a
+wizard-made venv is the path of least surprise.
+
+`startup-wizard` records your output format in `.claude/format.local`:
+
+- **`auto`** (the default when LaTeX is found) — LaTeX when an engine is
+  available, Word when it isn't; `tailor-resume` tells you which you got.
+- **`latex`** — LaTeX only; a missing engine is an error.
+- **`docx`** — Word only.
+
+`tailor-resume` sticks to that choice and offers the other format when it
+finishes. LaTeX needs `pdflatex` or `xelatex` (on PATH, or give the wizard
+the path to an existing install). Word needs no LaTeX: it builds a `.docx`
+with the same content and section order (ATS-friendly — tab stops and
+real bullets, no tables), but it can't count pages, so open it and
+confirm it fits on one.
+
+Calling `render_resume.py` yourself: `--format latex|docx|auto` (auto =
+LaTeX if found, else Word) and `--latex-engine <path>` for an off-PATH
+install.
 
 Python dependencies are pinned in `requirements.txt` (Jinja2, PyYAML,
-pydantic). `startup-wizard` installs them for you.
+pydantic, python-docx). `startup-wizard` installs them for you.
 
 ---
 
@@ -37,9 +69,10 @@ personal layer is git-ignored and created on your machine at setup.
 | Path | What it is |
 |---|---|
 | `.claude/skills/` | The four skills that drive everything |
-| `render_resume.py` | Deterministic renderer — selection + bank → `.tex` → `.pdf` |
+| `render_resume.py` | Deterministic renderer — selection + bank → `.tex` → `.pdf`, or `.docx` when no LaTeX |
 | `resume_template.tex.jinja` | LaTeX template (Jinja2, LaTeX-safe delimiters) |
 | `requirements.txt` | Pinned Python dependencies |
+| `tests/` | Renderer tests (format selection, Word fallback, LaTeX/Word content parity). Run `<python> -m unittest discover -s tests`; needs no LaTeX install |
 | `README.md` | This file |
 
 **Git-ignored (private, yours):**
@@ -49,6 +82,7 @@ personal layer is git-ignored and created on your machine at setup.
 | `experience_bank.json` | Your entire career history — the source of truth |
 | `jobs/` | Per-job folders: JD, fit assessment, selection, rendered resume |
 | `.claude/env.local` | Absolute path to your Python interpreter (machine-specific) |
+| `.claude/format.local` | Your output format (auto / latex / docx), plus a LaTeX engine path if off-PATH |
 | `.venv/` | Local virtualenv, if you create one |
 | `*.pdf` | Rendered resumes and any bootstrap source resume |
 
@@ -69,7 +103,10 @@ Open the directory in Claude Code and run:
 /startup-wizard
 ```
 
-**This is a one-time setup step.** It will:
+**Do this first, before any other skill.** Don't create the venv, install
+dependencies, or write `experience_bank.json` by hand — the wizard does
+all of it, verifies each step, and writes the machine-specific config
+files the other skills read. It's a one-time setup step. It will:
 
 1. **Build your experience bank** — either **(A)** from one or more
    existing resume files you point it at (PDF or `.tex`), extracting
@@ -78,8 +115,8 @@ Open the directory in Claude Code and run:
    written up yet. It asks which you'd prefer; (A) is usually faster and
    more thorough, and old or outdated resumes are still useful input.
 2. **Set up a Python environment** — detects what's on your machine,
-   offers to create a venv (or a conda env, or use one you already have),
-   installs dependencies, and writes the resolved interpreter path to
+   recommends creating a dedicated venv (a conda env, or one you already
+   have, also work), installs dependencies, and writes the resolved interpreter path to
    `.claude/env.local`. It verifies the path actually works before
    declaring success.
 3. **Initialize git** if needed, writing `.gitignore` *before* `git init`

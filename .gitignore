@@ -3,4 +3,7 @@ jobs/
 default/
 *.pdf
 .claude/env.local
+.claude/format.local
 .venv/
+__pycache__/
+/tests
